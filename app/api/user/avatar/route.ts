@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     }
 
     // Generate public_id
-    const publicId = `avatars/${session.user.id}-${Date.now()}`;
+    const publicId = `${session.user.id}-${Date.now()}`;
 
     // Convert file to stream for upload
     const buffer = Buffer.from(await file.arrayBuffer());
