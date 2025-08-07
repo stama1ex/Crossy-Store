@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       select: { avatar: true, username: true },
     });
 
-    // Удаление старого аватара из Cloudinary, если он существует
+    // Удаление старого аватара из Cloudinary
     if (user?.avatar) {
       try {
         await cloudinary.uploader.destroy(`avatars/${user.avatar}`, {
@@ -99,6 +99,12 @@ export async function POST(request: Request) {
     // Логирование URL для отладки
     console.log('Uploaded image URL:', uploadResult.secure_url);
 
+    // Формирование URL с трансформациями
+    const avatarUrl = `https://res.cloudinary.com/dcxsimayu/image/upload/c_auto,w_256,h_256,g_auto/c_limit,w_256/f_auto/q_auto/v1/avatars/${publicId}`;
+
+    // Проверка сформированного URL
+    console.log('Transformed avatar URL:', avatarUrl);
+
     // Обновление пользователя в базе данных
     await prisma.user.update({
       where: { id: session.user.id },
@@ -110,10 +116,10 @@ export async function POST(request: Request) {
       revalidateTag(`user-${user.username}`);
     }
 
-    // Возврат ответа с полной информацией
+    // Возврат ответа
     return NextResponse.json({
       success: true,
-      avatarUrl: uploadResult.secure_url,
+      avatarUrl,
       publicId,
       fullPath: `avatars/${publicId}`,
     });
