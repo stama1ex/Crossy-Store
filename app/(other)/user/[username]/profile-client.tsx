@@ -30,7 +30,7 @@ export default function UserProfile({ user }: UserProfileProps) {
   const [isPending, startTransition] = useTransition();
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    user.avatar || null
+    user.avatar ? `avatars/${user.avatar}` : null // Добавляем папку avatars
   );
   const [username, setUsername] = useState(user.username);
   const [fullName, setFullName] = useState(user.fullName || '');
@@ -130,12 +130,12 @@ export default function UserProfile({ user }: UserProfileProps) {
               : error || 'Failed to update avatar'
           );
         }
-        const { publicId } = await response.json();
+        const { avatarUrl } = await response.json(); // Используем avatarUrl вместо publicId
         setAvatar(null);
         if (avatarPreview && avatarPreview.startsWith('blob:')) {
           URL.revokeObjectURL(avatarPreview);
         }
-        setAvatarPreview(publicId);
+        setAvatarPreview(avatarUrl); // Устанавливаем avatarUrl
         setSuccess('Avatar updated successfully');
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
@@ -195,7 +195,9 @@ export default function UserProfile({ user }: UserProfileProps) {
       }
       const updatedUser = await response.json();
       console.log('Updated user data:', updatedUser);
-      setAvatarPreview(updatedUser.avatar || null);
+      setAvatarPreview(
+        updatedUser.avatar ? `avatars/${updatedUser.avatar}` : null
+      ); // Добавляем avatars/
       setFullName(updatedUser.fullName || '');
       setUsername(updatedUser.username);
 
