@@ -8,20 +8,21 @@ import { UploadApiResponse } from 'cloudinary';
 import { Readable } from 'stream';
 
 export async function POST(request: Request) {
+  // Проверка аутентификации
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Получение файла из запроса
   const formData = await request.formData();
   const file = formData.get('avatar') as File;
 
-  // Validate file
+  // Валидация файла
   if (!file) {
     return NextResponse.json({ error: 'No file provided' }, { status: 400 });
   }
 
-  // Validate file type
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   if (!allowedTypes.includes(file.type)) {
     return NextResponse.json(
@@ -30,7 +31,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // Validate file size (2MB limit)
   if (file.size > 2 * 1024 * 1024) {
     return NextResponse.json(
       { error: 'Image size must be less than 2MB' },
@@ -39,32 +39,38 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Fetch current user data
+    // Получение данных пользователя
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { avatar: true, username: true },
     });
 
-    // Delete old avatar from Cloudinary if it exists
+    // Удаление старого аватара из Cloudinary, если он существует
     if (user?.avatar) {
       try {
-        await cloudinary.uploader.destroy(user.avatar, {
+        await cloudinary.uploader.destroy(`avatars/${user.avatar}`, {
           invalidate: true,
           resource_type: 'image',
         });
       } catch (destroyError) {
-        console.warn('Failed to delete old avatar:', destroyError);
+        console.warn(
+          'Failed to delete old avatar from Cloudinary:',
+          destroyError
+        );
       }
     }
 
-    // Generate public_id
-    const publicId = `${session.user.id}-${Date.now()}`;
+    // Генерация public_id
+    const publicId = `${session.user.id}-${Date.now()}`.replace(
+      /[^a-zA-Z0-9-_]/g,
+      ''
+    );
 
-    // Convert file to stream for upload
+    // Конвертация файла в поток
     const buffer = Buffer.from(await file.arrayBuffer());
     const stream = Readable.from(buffer);
 
-    // Upload to Cloudinary with optimizations
+    // Загрузка в Cloudinary
     const uploadResult: UploadApiResponse = await new Promise(
       (resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
@@ -85,24 +91,37 @@ export async function POST(request: Request) {
       }
     );
 
-    // Update user in database with public_id
+    // Проверка успешности загрузки
+    if (!uploadResult.secure_url) {
+      throw new Error('Failed to upload image to Cloudinary');
+    }
+
+    // Логирование URL для отладки
+    console.log('Uploaded image URL:', uploadResult.secure_url);
+
+    // Обновление пользователя в базе данных
     await prisma.user.update({
       where: { id: session.user.id },
       data: { avatar: publicId },
     });
 
-    // Revalidate cache
+    // Очистка кэша
     if (user?.username) {
       revalidateTag(`user-${user.username}`);
     }
 
+    // Возврат ответа с полной информацией
     return NextResponse.json({
       success: true,
       avatarUrl: uploadResult.secure_url,
       publicId,
+      fullPath: `avatars/${publicId}`,
     });
   } catch (error) {
-    console.error('Avatar upload failed:', error);
+    console.error('Avatar upload failed:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       {
         error:
