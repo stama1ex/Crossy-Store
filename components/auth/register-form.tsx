@@ -14,6 +14,7 @@ import {
   InputOTPSeparator,
 } from '@/components/ui/input-otp';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react'; // Добавляем иконки
 
 function RegisterForm({ className, ...props }: React.ComponentProps<'div'>) {
   const [email, setEmail] = useState('');
@@ -27,6 +28,8 @@ function RegisterForm({ className, ...props }: React.ComponentProps<'div'>) {
   const [verificationCode, setVerificationCode] = useState('');
   const [serverEmail, setServerEmail] = useState('');
   const [resendTimeout, setResendTimeout] = useState(0);
+  const [showPassword, setShowPassword] = useState(false); // Состояние для пароля
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Состояние для подтверждения пароля
 
   // Handle Escape key to close modal
   useEffect(() => {
@@ -270,23 +273,45 @@ function RegisterForm({ className, ...props }: React.ComponentProps<'div'>) {
               </div>
               <div className="grid gap-3">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
               <div className="grid gap-3">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
+                  </button>
+                </div>
               </div>
 
               {error && (
@@ -361,7 +386,7 @@ function RegisterForm({ className, ...props }: React.ComponentProps<'div'>) {
               </div>
 
               {error && (
-                <p className="text-destructive text-center text-sm my-4">
+                <p className="text-destructiveHarmon text-center text-sm my-4">
                   {error}
                 </p>
               )}

@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react'; // Добавляем иконки
 
 export function LoginForm({
   className,
@@ -24,6 +25,7 @@ export function LoginForm({
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Состояние для пароля
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,13 +133,22 @@ export function LoginForm({
                       Forgot your password?
                     </Link> */}
                   </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </div>
                 {error && (
                   <p className="text-destructive text-center text-sm">
