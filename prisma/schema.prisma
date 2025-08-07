@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  fullName  String    @map("full_name")
+  username  String    @unique
+  password  String
+  role      UserRole  @default(USER)
+  favorites Favorite[]
+  cart      Cart?
+  orders    Order[]
+  avatar     String?
+  isVerified  Boolean   @default(false) @map("is_verified")
+  verificationCode VerificationCode?
+  comments Comment[]
+
+  provider String? 
+  providerId String?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+}
+
+model Brand {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  models ShoeModel[]
+}
+
+model ShoeModel {
+  id          Int      @id @default(autoincrement())
+  name        String
+  brand       Brand    @relation(fields: [brandId], references: [id])
+  brandId     Int
+  shoes       Shoe[]
+}
+
+model Shoe {
+  id          Int      @id @default(autoincrement())
+  model       ShoeModel @relation(fields: [modelId], references: [id])
+  modelId     Int @map("model_id")
+  imageURL    String
+  description String
+  color       PaletteColor
+  gender      Gender
+  price       Float
+  favorites   Favorite[]
+  cartItems   CartItem[]
+  orders      OrderItem[]
+  comments    Comment[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+}
+
+model Favorite {
+  id         Int     @id @default(autoincrement())
+  user       User    @relation(fields: [userId], references: [id])
+  userId     Int @map("user_id")
+  shoe       Shoe    @relation(fields: [shoeId], references: [id])
+  shoeId     Int @map("shoe_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, shoeId])
+}
+
+model Cart {
+  id        Int        @id @default(autoincrement())
+  user      User       @relation(fields: [userId], references: [id])
+  userId    Int        @unique @map("user_id")
+  items     CartItem[]
+
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  cartId    Int      @map("cart_id")
+  shoe      Shoe     @relation(fields: [shoeId], references: [id])
+  shoeId    Int      @map("shoe_id")
+  size      Int
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@unique([cartId, shoeId, size])
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  user        User        @relation(fields: [userId], references: [id])
+  userId      Int @map("user_id")
+  items       OrderItem[]
+  totalPrice  Decimal @map("total_price")
+  status      OrderStatus @default(PENDING)
+  paymentId   String?   @map("payment_id")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   Int @map("order_id")
+  shoe      Shoe     @relation(fields: [shoeId], references: [id])
+  shoeId    Int @map("shoe_id")
+  size      Int
+  quantity  Int      @default(1)
+  price     Decimal
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model VerificationCode {
+  id        Int      @id @default(autoincrement())
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    Int?     @map("user_id") @unique
+  code      String
+  type      VerificationType @default(REGISTRATION)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  email     String
+  username  String
+  fullName  String
+  password  String
+
+  @@unique([email, type])
+  @@index([email])
+}
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  userId    Int
+  shoeId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shoe      Shoe     @relation(fields: [shoeId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  SUCCEEDED
+  CANCELLED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  UNISEX
+}
+
+enum PaletteColor {
+  NEUTRAL
+  OTHER
+}
+
+enum VerificationType {
+  REGISTRATION
+  RESET_PASSWORD
+}
