@@ -5,15 +5,12 @@ import { authOptions } from '@/lib/auth';
 
 export async function GET(req: Request) {
   try {
-    console.time('getFavorites');
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      console.log('Unauthorized access');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const userId = Number(session.user.id);
-    console.log(`Fetching favorites for userId: ${userId}`);
 
     const favorites = await prisma.favorite.findMany({
       where: { userId },
@@ -38,9 +35,6 @@ export async function GET(req: Request) {
         },
       },
     });
-
-    console.log(`Fetched ${favorites.length} favorites for userId: ${userId}`);
-    console.timeEnd('getFavorites');
 
     return NextResponse.json(
       favorites.map((fav) => ({
@@ -75,7 +69,6 @@ export async function POST(request: Request) {
 
     userId = Number(session.user.id);
     shoeId = parsedShoeId;
-    console.log('Adding favorite:', { userId, shoeId });
 
     // Verify user exists
     const userExists = await prisma.user.findUnique({
@@ -103,7 +96,6 @@ export async function POST(request: Request) {
     });
 
     if (existingFavorite) {
-      console.log('Favorite already exists:', { id: existingFavorite.id });
       return NextResponse.json(existingFavorite, { status: 200 });
     }
 
@@ -136,7 +128,6 @@ export async function POST(request: Request) {
       },
     });
 
-    console.log('Favorite created:', { id: favorite.id });
     return NextResponse.json(favorite, { status: 201 });
   } catch (error) {
     console.error('Error adding favorite:', {
