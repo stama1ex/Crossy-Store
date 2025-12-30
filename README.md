@@ -38,7 +38,7 @@ This project serves as a comprehensive example of building scalable web applicat
   </a>
   <br/><br/>
   <a href="https://crossy-store.vercel.app/" target="_blank">
-    <img src="https://res.cloudinary.com/dcxsimayu/image/upload/v1754771790/fec61448-043a-465a-905e-cda05af3f2c7.png" alt="Product Page Preview" width="100%" />
+    <img src="https://res.cloudinary.com/dcxsimayu/image/upload/v1754771790/fec61448-043a-465a-905e-cda05af3f2c7.png" alt="Product Page Preview" width="50%" />
   </a>
 </div>
 
@@ -537,7 +537,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## 👨‍💻 Author
 
-**Stanislav** - [GitHub](https://github.com/stama1ex)
+**Stamat Alex** - [GitHub](https://github.com/stama1ex)
 
 ---
 
